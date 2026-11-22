@@ -172,6 +172,11 @@ class TestFieldDeserialization:
             field.deserialize(m5)
         assert excinfo.value.args[0] == "Not a valid number."
 
+    def test_decimal_field_places_is_introspectable(self):
+        assert fields.Decimal(2).places == 2
+        assert fields.Decimal(places=3).places == 3
+        assert fields.Decimal().places is None
+
     def test_decimal_field_with_places_and_rounding(self):
         m1 = 12
         m2 = "12.355"

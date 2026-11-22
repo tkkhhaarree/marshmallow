@@ -1091,6 +1091,10 @@ class Decimal(Number[decimal.Decimal]):
     :param as_string: If `True`, serialize to a string instead of a Python
         `decimal.Decimal` type.
     :param kwargs: The same keyword arguments that :class:`Number` receives.
+
+    .. versionchanged:: 4.5.0
+        ``places`` is stored on the field as the `int` passed in (or `None`),
+        so it can be introspected, e.g. by documentation generators.
     """
 
     num_type = decimal.Decimal
@@ -1109,9 +1113,7 @@ class Decimal(Number[decimal.Decimal]):
         as_string: bool = False,
         **kwargs: Unpack[_BaseFieldKwargs],
     ):
-        self.places = (
-            decimal.Decimal((0, (1,), -places)) if places is not None else None
-        )
+        self.places = places
         self.rounding = rounding
         self.allow_nan = allow_nan
         super().__init__(as_string=as_string, **kwargs)
@@ -1122,8 +1124,9 @@ class Decimal(Number[decimal.Decimal]):
         if self.allow_nan:
             if num.is_nan():
                 return decimal.Decimal("NaN")  # avoid sNaN, -sNaN and -NaN
-        if self.places is not None and num.is_finite():
-            num = num.quantize(self.places, rounding=self.rounding)
+        if self.places and num.is_finite():
+            exponent = decimal.Decimal((0, (1,), -self.places))
+            num = num.quantize(exponent, rounding=self.rounding)
         return num
 
     # override Number
