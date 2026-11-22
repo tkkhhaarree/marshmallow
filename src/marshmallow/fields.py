@@ -1916,6 +1916,8 @@ class Enum(Field[_EnumT]):
     :param enum: Enum class
     :param by_value: Whether to (de)serialize by value or by name,
         or Field class or instance to use to (de)serialize by value. Defaults to False.
+    :param case_insensitive: If `True`, match names (or string values when
+        `by_value` is enabled) regardless of case when deserializing. Defaults to False.
 
     If `by_value` is `False` (default), enum members are (de)serialized by symbol (name).
     If it is `True`, they are (de)serialized by value using `marshmallow.fields.Raw`.
@@ -1923,6 +1925,8 @@ class Enum(Field[_EnumT]):
     If `by_value` is enabled on an enum with a `None` value, `allow_none` defaults to `True`.
 
     .. versionadded:: 3.18.0
+    .. versionchanged:: 4.5.0
+        Add ``case_insensitive`` parameter.
     """
 
     default_error_messages = {
@@ -1934,11 +1938,23 @@ class Enum(Field[_EnumT]):
         enum: type[_EnumT],
         *,
         by_value: bool | Field | type[Field] = False,
+        case_insensitive: bool = False,
         **kwargs: Unpack[_BaseFieldKwargs],
     ):
         super().__init__(**kwargs)
         self.enum = enum
         self.by_value = by_value
+        self.case_insensitive = case_insensitive
+        if case_insensitive:
+            if by_value is False:
+                self._lookup = {
+                    name.lower(): member for name, member in enum.__members__.items()
+                }
+            else:
+                self._lookup = {
+                    (m.value.lower() if isinstance(m.value, str) else m.value): m
+                    for m in enum
+                }
 
         # Serialization by name
         if by_value is False:
@@ -1979,6 +1995,11 @@ class Enum(Field[_EnumT]):
         if isinstance(value, self.enum):
             return value
         val = self.field._deserialize(value, attr, data, **kwargs)
+        if self.case_insensitive:
+            try:
+                return self._lookup[val.lower()]
+            except KeyError as error:
+                raise self.make_error("unknown", choices=self.choices_text) from error
         if self.by_value:
             try:
                 return self.enum(val)

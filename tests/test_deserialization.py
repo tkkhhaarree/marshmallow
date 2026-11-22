@@ -1221,6 +1221,25 @@ class TestFieldDeserialization:
         with pytest.raises(ValidationError, match="Not a valid string."):
             field.deserialize(12)
 
+    def test_enum_field_by_symbol_case_insensitive(self):
+        field = fields.Enum(GenderEnum, case_insensitive=True)
+        assert field.deserialize("MALE") == GenderEnum.male
+        assert field.deserialize("Non_Binary") == GenderEnum.non_binary
+        with pytest.raises(
+            ValidationError, match="Must be one of: male, female, non_binary."
+        ):
+            field.deserialize("dummy")
+
+    def test_enum_field_by_value_case_insensitive(self):
+        field = fields.Enum(HairColorEnum, by_value=True, case_insensitive=True)
+        assert field.deserialize("Black Hair") == HairColorEnum.black
+        assert field.deserialize("RED HAIR") == HairColorEnum.red
+        with pytest.raises(
+            ValidationError,
+            match="Must be one of: black hair, brown hair, blond hair, red hair.",
+        ):
+            field.deserialize("green hair")
+
     def test_enum_field_by_value_true_deserialization(self):
         field = fields.Enum(HairColorEnum, by_value=True)
         assert field.deserialize("black hair") == HairColorEnum.black
