@@ -1363,6 +1363,17 @@ class TestFieldDeserialization:
         assert excinfo.value.args[0][1] == ["Value 5 not in range"]
         assert excinfo.value.args[0][2] == ["Value 25 not in range"]
 
+    def test_list_field_max_items(self):
+        field = fields.List(fields.Int(), max_items=3)
+        assert field.deserialize([1, 2]) == [1, 2]
+        with pytest.raises(ValidationError) as excinfo:
+            field.deserialize([1, 2, 3, 4, 5])
+        assert excinfo.value.args[0] == "Must not contain more than 3 items."
+
+    def test_list_field_max_items_with_generator(self):
+        field = fields.List(fields.Int(), max_items=3)
+        assert field.deserialize(x for x in [1, 2]) == [1, 2]
+
     @pytest.mark.parametrize("value", ["notalist", 42, {}])
     def test_list_field_deserialize_value_that_is_not_a_list(self, value):
         field = fields.List(fields.Str())

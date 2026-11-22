@@ -728,21 +728,31 @@ class List(Field[list[_InternalT | None]]):
         numbers = fields.List(fields.Float())
 
     :param cls_or_instance: A field class or instance.
+    :param max_items: Maximum number of items allowed when deserializing.
+        If `None`, the list may be of any length.
     :param kwargs: The same keyword arguments that :class:`Field` receives.
 
     .. versionchanged:: 3.0.0rc9
         Does not serialize scalar values to single-item lists.
+    .. versionchanged:: 4.5.0
+        Add ``max_items`` parameter.
     """
 
     #: Default error messages.
-    default_error_messages = {"invalid": "Not a valid list."}
+    default_error_messages = {
+        "invalid": "Not a valid list.",
+        "too_long": "Must not contain more than {max_items} items.",
+    }
 
     def __init__(
         self,
         cls_or_instance: Field[_InternalT] | type[Field[_InternalT]],
+        *,
+        max_items: int | None = None,
         **kwargs: Unpack[_BaseFieldKwargs],
     ):
         super().__init__(**kwargs)
+        self.max_items = max_items
         try:
             self.inner: Field[_InternalT] = _resolve_field_instance(cls_or_instance)
         except _FieldInstanceResolutionError as error:
@@ -770,6 +780,11 @@ class List(Field[list[_InternalT | None]]):
     def _deserialize(self, value, attr, data, **kwargs) -> list[_InternalT | None]:
         if not utils.is_collection(value):
             raise self.make_error("invalid")
+        if self.max_items is not None:
+            # materialize generators/querysets so we can check the length
+            value = list(value)
+            if len(value) >= self.max_items:
+                raise self.make_error("too_long", max_items=self.max_items)
 
         result = []
         errors = {}
