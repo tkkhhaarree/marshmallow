@@ -863,6 +863,12 @@ class TestFieldDeserialization:
         unit_value = dt.timedelta(weeks=1).total_seconds()
         assert math.isclose(result.total_seconds() / unit_value, total_weeks_value)
 
+    def test_timedelta_field_deserialization_large_values_are_exact(self):
+        field = fields.TimeDelta(fields.TimeDelta.WEEKS)
+        assert field.deserialize(100000) == dt.timedelta(weeks=100000)
+        field = fields.TimeDelta(fields.TimeDelta.HOURS)
+        assert field.deserialize(10**7) == dt.timedelta(hours=10**7)
+
     @pytest.mark.parametrize(
         "in_value", ["", "badvalue", [], 9999999999, "nan", "inf", "-inf"]
     )

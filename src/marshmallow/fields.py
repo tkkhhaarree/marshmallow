@@ -1567,10 +1567,14 @@ class TimeDelta(Field[dt.timedelta]):
         except (TypeError, ValueError) as error:
             raise self.make_error("invalid") from error
 
-        kwargs = {self.precision: value}
+        # Build the timedelta from whole microseconds, mirroring _serialize, instead of
+        # passing a float in `precision` units: for large unit counts, timedelta's own
+        # per-unit float arithmetic can drift by a few microseconds.
+        microseconds_per_unit = self._unit_to_microseconds_mapping[self.precision]
 
         try:
-            return dt.timedelta(**kwargs)
+            microseconds = int(value * microseconds_per_unit)
+            return dt.timedelta(microseconds=microseconds)
         except (OverflowError, ValueError) as error:
             # OverflowError: value out of timedelta's range (e.g. infinity).
             # ValueError: value is NaN.
