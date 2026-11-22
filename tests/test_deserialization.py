@@ -350,6 +350,10 @@ class TestFieldDeserialization:
         assert field.deserialize("no") is False
         assert field.deserialize("NO") is False
         assert field.deserialize("No") is False
+        assert field.deserialize("Enabled") is True
+        assert field.deserialize("ENABLED") is True
+        assert field.deserialize("Disabled") is False
+        assert field.deserialize("DISABLED") is False
         assert field.deserialize(1) is True
         assert field.deserialize(0) is False
 

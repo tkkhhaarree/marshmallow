@@ -1150,6 +1150,10 @@ class Boolean(Field[bool]):
     :param falsy: Values that will (de)serialize to `False`. If `None`,
         `marshmallow.fields.Boolean.falsy` will be used.
     :param kwargs: The same keyword arguments that :class:`Field` receives.
+
+    .. versionchanged:: 4.5.0
+        "enabled" and "disabled" (in lower, title and upper case) are accepted
+        by default, as commonly sent by feature-flag and settings forms.
     """
 
     #: Default truthy values.
@@ -1167,6 +1171,9 @@ class Boolean(Field[bool]):
         "yes",
         "Yes",
         "YES",
+        "disabled",
+        "Enabled",
+        "ENABLED",
         "1",
         1,
         # Equal to 1
@@ -1187,6 +1194,9 @@ class Boolean(Field[bool]):
         "no",
         "No",
         "NO",
+        "disabled",
+        "Disabled",
+        "DISABLED",
         "0",
         0,
         # Equal to 0
