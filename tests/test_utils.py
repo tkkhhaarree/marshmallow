@@ -71,20 +71,30 @@ def test_get_value_from_dict():
 
 def test_set_value():
     d: dict[str, int | dict] = {}
-    utils.set_value(d, "foo", 42)
+    utils.set_value(d, "foo", ".", 42)
     assert d == {"foo": 42}
 
     d = {}
-    utils.set_value(d, "foo.bar", 42)
+    utils.set_value(d, "foo.bar", ".", 42)
     assert d == {"foo": {"bar": 42}}
 
     d = {"foo": {}}
-    utils.set_value(d, "foo.bar", 42)
+    utils.set_value(d, "foo.bar", ".", 42)
     assert d == {"foo": {"bar": 42}}
 
     d = {"foo": 42}
     with pytest.raises(ValueError):
-        utils.set_value(d, "foo.bar", 42)
+        utils.set_value(d, "foo.bar", ".", 42)
+
+
+def test_set_value_custom_sep():
+    d: dict[str, int | dict] = {}
+    utils.set_value(d, "foo/bar", "/", 42)
+    assert d == {"foo": {"bar": 42}}
+
+    d = {}
+    utils.set_value(d, "foo.bar", "/", 42)
+    assert d == {"foo.bar": 42}
 
 
 def test_is_collection():

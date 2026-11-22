@@ -123,25 +123,33 @@ def _get_value_for_key(obj, key, default):
         return getattr(obj, key, default)
 
 
-def set_value(dct: dict[str, typing.Any], key: str, value: typing.Any):
-    """Set a value in a dict. If `key` contains a '.', it is assumed
-    to be a path (i.e. dot-delimited string) to the value's location.
+def set_value(
+    dct: dict[str, typing.Any],
+    key: str,
+    sep: str = ".",
+    value: typing.Any = None,
+):
+    """Set a value in a dict. If `key` contains `sep` (default '.'), it is
+    assumed to be a path (i.e. a delimited string) to the value's location.
 
     ::
 
         >>> d = {}
-        >>> set_value(d, 'foo.bar', 42)
+        >>> set_value(d, 'foo.bar', '.', 42)
         >>> d
         {'foo': {'bar': 42}}
+        >>> set_value(d, 'a/b', '/', 1)
+        >>> d
+        {'foo': {'bar': 42}, 'a': {'b': 1}}
     """
-    if "." in key:
-        head, rest = key.split(".", 1)
+    if sep in key:
+        head, rest = key.split(sep, 1)
         target = dct.setdefault(head, {})
         if not isinstance(target, dict):
             raise ValueError(
                 f"Cannot set {key} in {head} due to existing value: {target}"
             )
-        set_value(target, rest, value)
+        set_value(target, rest, sep, value)
     else:
         dct[key] = value
 
