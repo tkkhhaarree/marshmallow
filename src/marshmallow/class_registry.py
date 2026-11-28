@@ -82,8 +82,10 @@ def get_class(
 def get_class(classname: str, *, all: bool = False) -> list[SchemaType] | SchemaType:  # noqa: A002
     """Retrieve a class from the registry.
 
-    :raises: `marshmallow.exceptions.RegistryError` if the class cannot be found
-        or if there are multiple entries for the given class name.
+    If several classes were registered under the same name, the first one
+    registered is returned (pass ``all=True`` to get every match).
+
+    :raises: `marshmallow.exceptions.RegistryError` if the class cannot be found.
     """
     try:
         classes = _registry[classname]
@@ -92,12 +94,6 @@ def get_class(classname: str, *, all: bool = False) -> list[SchemaType] | Schema
             f"Class with name {classname!r} was not found. You may need "
             "to import the class."
         ) from error
-    if len(classes) > 1:
-        if all:
-            return _registry[classname]
-        raise RegistryError(
-            f"Multiple classes with name {classname!r} "
-            "were found. Please use the full, "
-            "module-qualified path."
-        )
-    return _registry[classname][0]
+    if all and len(classes) > 1:
+        return classes
+    return classes[0]

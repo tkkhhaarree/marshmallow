@@ -187,19 +187,12 @@ class FooSerializer(Schema):
     _id = fields.Integer()
 
 
-def test_multiple_classes_with_same_name_raises_error():
+def test_multiple_classes_with_same_name_returns_first():
     # Import a class with the same name
     from .foo_serializer import FooSerializer as FooSerializer1  # noqa: PLC0415, F401
 
-    class MySchema(Schema):
-        foo = fields.Nested("FooSerializer")
-
-    # Using a nested field with the class name fails because there are
-    # two defined classes with the same name
-    sch = MySchema()
-    msg = "Multiple classes with name {!r} were found.".format("FooSerializer")
-    with pytest.raises(RegistryError, match=msg):
-        sch.dump({"foo": {"_id": 1}})
+    # The first class registered under the name is returned
+    assert class_registry.get_class("FooSerializer") is FooSerializer
 
 
 def test_multiple_classes_with_all():
